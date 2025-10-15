@@ -1,13 +1,62 @@
-\documentclass[multi, border=25.4]{standalone}
+\documentclass[multi, border=25]{standalone}
 
+
+% LaTeX packages
 \usepackage[siunitx]{circuitikz}
 
+% TikZ libraries
+\usetikzlibrary{fit}
+\usetikzlibrary{calc}
+
+% link standalone environment with each circuitikz scope 
 \standaloneenv{circuitikz}
+
+
+% ------------------------------------------------------------------------------
+% Infineon gate driver subcircuit macro
+% ------------------------------------------------------------------------------
+
+\ctikzsubcircuitdef{GateDriver}{center}{
+  coordinate(#1-center)
+  % draw forward and reverse inductive digital isolator channels
+  \foreach[count=\i from 1, evaluate={\j=2.4*(-1)^\i}] \l/\m/\n in {down/RX/TX, up/TX/RX} {
+    (#1-center) +(0, \j) node[
+      transformer core,
+      circuitikz/inductors/coils=2,
+      circuitikz/inductors/width=0.4,
+      circuitikz/quadpoles/transformer core/height=0.65,
+    ] (#1-core-\l) {}
+    (#1-core-\l.west) +(-1.2,0) node[fourport, t=\m] (#1-\l-\m) {}
+    (#1-core-\l.east) +(1.2,0) node[fourport, t=\n] (#1-\l-\n) {}
+    (#1-\l-\m.port2) -- (#1-core-\l.A2)
+    (#1-\l-\m.port3) -- (#1-core-\l.A1)
+    (#1-\l-\n.port1) -- (#1-core-\l.B2)
+    (#1-\l-\n.port4) -- (#1-core-\l.B1)
+  }
+  % draw isolation barrier
+  node[draw, dash dot dot, blue, inner xsep=4pt, inner ysep=0pt, fit=(#1-core-down.south) (#1-core-up.north)] (#1-isolation) {}
+  (#1-isolation.west) node[above, rotate=90, blue] {Reinforced Isolation}
+  (#1-isolation.east) node[below, rotate=90, blue, font=\tiny] {$V_\text{ISO, rms}=5700\text{V}$ for 60s}
+  % draw digital cores
+  \foreach[count=\i from 1, evaluate={\j=6.8*(-1)^\i}] \l in {left, right} {
+    (#1-center) +(\j,0) node[qfpchip, hide numbers, no topmark, num pins=20, external pins width=0] (#1-digital-\l) {Digital Core}
+  }
+  % connect digital cores and isolators
+  (#1-digital-right.pin 2) -| ($(#1-digital-right.pin 2)!0.5!(#1-up-RX.east)$) |- (#1-up-RX.east)
+  (#1-digital-right.pin 4) -| ($(#1-digital-right.pin 4)!0.5!(#1-down-TX.east)$) |- (#1-down-TX.east)
+  (#1-digital-left.pin 12) -| ($(#1-digital-left.pin 12)!0.5!(#1-down-RX.west)$) |- (#1-down-RX.west)
+  (#1-digital-left.pin 14) -| ($(#1-digital-left.pin 14)!0.5!(#1-up-TX.west)$) |- (#1-up-TX.west)
+  %
+}
+
+
+\ctikzsubcircuitactivate{GateDriver}
+
 
 \begin{document}
 
 \begin{circuitikz}[american]
-  # TODO add code
+  \draw (0,0) \GateDriver{test}{center}; 
 \end{circuitikz}
 
 \end{document}
