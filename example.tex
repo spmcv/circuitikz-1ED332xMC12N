@@ -19,7 +19,7 @@
 \ctikzsubcircuitdef{GateDriver}{center}{
   coordinate(#1-center)
   % draw forward and reverse inductive digital isolator channels
-  \foreach[count=\i from 1, evaluate={\j=2.4*(-1)^\i}] \l/\m/\n in {down/RX/TX, up/TX/RX} {
+  \foreach[ count=\i from 1, evaluate={\j=2.4*(-1)^\i} ] \l/\m/\n in {down/RX/TX, up/TX/RX} {
     (#1-center) +(0, \j) node[
       transformer core,
       circuitikz/inductors/coils=2,
@@ -47,6 +47,18 @@
   (#1-digital-left.pin 12) -| ($(#1-digital-left.pin 12)!0.5!(#1-down-RX.west)$) |- (#1-down-RX.west)
   (#1-digital-left.pin 14) -| ($(#1-digital-left.pin 14)!0.5!(#1-up-TX.west)$) |- (#1-up-TX.west)
   %
+  \foreach[ count=\i from 0, evaluate={\j=(\i==0 ? 0 : 6*(-1)^\i * int((\i+1)/2))} ] \l in {in+, fault, in-, ready, reset} {
+    (#1-digital-left.west) +(-4,\j) node[circ] (#1-node-\l) {\l}
+  }
+  (#1-node-ready) node[nigfete, anchor=drain, xscale=-1] (#1-mosfet-ready) {}
+  (#1-mosfet-ready.source) node[cground] {}
+  (#1-mosfet-ready.drain) to[R] +(0,2) node[vcc] {}
+  (#1-node-fault) node[nigfete, anchor=drain, xscale=-1] (#1-mosfet-fault) {}
+  (#1-mosfet-fault.source) node[cground] {}
+  (#1-mosfet-fault.drain) to[R] +(0,2) node[vcc] {}
+  (#1-node-in+) to[R] +(0,-2) node[cground] {}
+  (#1-node-in-) to[R] +(0,2) node[vcc] {}
+  (#1-node-reset) to[R] +(0,2) node[vcc] {}
 }
 
 
